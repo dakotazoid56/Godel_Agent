@@ -1,5 +1,6 @@
 import random
 import string
+import os
 from collections import namedtuple
 from typing import List
 from openai import OpenAI
@@ -9,16 +10,21 @@ import json
 import numpy as np
 import pandas as pd
 from wrap import wrap_solver
+from config import get_openai_instance,DEFAULT_MODEL,SOLVER_MODEL
+
 
 Example = namedtuple('Example', ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_index', 'domain'])
-client = OpenAI()
+
+client = get_openai_instance()
+
 threshold = 0.31
 last_test_acc = 0.
 
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        model="gpt-3.5-turbo", 
+        #model="gpt-3.5-turbo",
+        model=SOLVER_MODEL,
         messages=messages, 
         temperature=0.8, 
         num_of_response=1,

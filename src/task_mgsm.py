@@ -2,10 +2,12 @@ import json
 import random
 import time
 import string
+import os
 from tqdm import tqdm
 from openai import OpenAI
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
+from config import get_openai_instance, DEFAULT_MODEL, SOLVER_MODEL
 
 import numpy as np
 from wrap import wrap_solver
@@ -14,7 +16,8 @@ Example = namedtuple('Example', ['question', 'choice1', 'choice2', 'choice3', 'c
 threshold = 0.5
 last_test_acc = 0.
 
-client = OpenAI()
+client = get_openai_instance()
+
 LANG_TO_INSTRUCTIONS = {
     "en": """Solve this math problem.
 
@@ -58,7 +61,8 @@ ALL_LANGUAGES = ["bn", "de", "en", "es", "fr", "ja", "ru", "sw", "te", "th", "zh
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        model="gpt-3.5-turbo", 
+        #model="gpt-3.5-turbo", 
+        model=SOLVER_MODEL,
         messages=messages, 
         temperature=0.8, 
         num_of_response=1,

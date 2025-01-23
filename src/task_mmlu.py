@@ -9,9 +9,11 @@ from openai import OpenAI
 import numpy as np
 import time
 from wrap import wrap_solver
+import os
+from config import get_openai_instance, DEFAULT_MODEL, SOLVER_MODEL
 
 Example = namedtuple('Example', ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_index'])
-client = OpenAI()
+client = get_openai_instance()
 threshold = 0.80
 last_test_acc = 0.
 
@@ -30,7 +32,8 @@ Choices:
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        model="gpt-3.5-turbo", 
+        #model="gpt-3.5-turbo",
+        model=SOLVER_MODEL, 
         messages=messages, 
         temperature=0.8, 
         num_of_response=1,

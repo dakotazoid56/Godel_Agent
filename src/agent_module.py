@@ -15,6 +15,7 @@ import contextlib
 import collections
 import openai
 import logic
+from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL
 
 
 action_counter = collections.defaultdict(int)
@@ -127,7 +128,8 @@ def action_adjust_logic(module_name: str, target_name: str, new_code=str, target
     """
     if module_name == "agent_module":
         if target_name == "solver":
-            if "gpt-4o" in new_code:
+            #if "gpt-4o" in new_code:
+            if EVOLVE_MODEL in new_code:
                 raise ValueError("ONLY model **gpt-3.5-turbo** can be used in solver.")
             if "time.sleep" in new_code:
                 raise ValueError("Don't use `time.sleep` in solver.")
@@ -277,11 +279,14 @@ def action_run_code(code_type: str, code: str, timeout: float = 30.0) -> str:
     
     return result_str or "No output, errors, or return value."
 
-import Gödel_Agent.src.task_mgsm as task_mgsm
+#import Gödel_Agent.src.task_mgsm as task_mgsm
+import task_mgsm as task_mgsm
+
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        model="gpt-3.5-turbo", 
+        #model="gpt-3.5-turbo", 
+        model=SOLVER_MODEL,
         messages=messages, 
         temperature=0.8, 
         num_of_response=1,
@@ -319,7 +324,8 @@ class Agent(AgentBase):
         if api_key is None:
             api_key = open(key_path, 'r').read().strip()
         openai.api_key = api_key
-        agent.client = openai.OpenAI(api_key=api_key)
+        #agent.client = openai.OpenAI(api_key=api_key)
+        agent.client = get_openai_instance()
 
         # Initialize optimization history and iterations
 
@@ -450,7 +456,9 @@ class Agent(AgentBase):
                         "type": "object",
                         "properties": {
                             "model": {
-                                "enum": ["gpt-4o-mini", "gpt-4o"],
+                                #"enum": ["gpt-4o-mini", "gpt-4o"],
+                                "enum": NON_SOLVER_MODELS,
+
                                 "description": "ID of the model to use."
                             },
                             "messages": {
@@ -612,7 +620,9 @@ class Agent(AgentBase):
                     {"role": "system", "name": "Environment", "content": action_environment_aware(agent)},
                     *agent.optimize_history]
         try:
-            response = agent.action_call_llm(messages=messages, model="gpt-4o", response_format="text", tools=agent.action_functions, tool_choice="required")
+            #response = agent.action_call_llm(messages=messages, model="gpt-4o", response_format="text", tools=agent.action_functions, tool_choice="required")
+            response = agent.action_call_llm(messages=messages, model=EVOLVE_MODEL, response_format="text", tools=agent.action_functions, tool_choice="required")
+
         except Exception as e:
             print(repr(e))
             for message in messages:
@@ -626,7 +636,8 @@ class Agent(AgentBase):
         agent,
         *,
         messages: typing.List[typing.Dict[str, str]], 
-        model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
+        #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
+        model: DEFAULT_MODEL,
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
         num_of_response: int = 1,
@@ -656,7 +667,8 @@ class Agent(AgentBase):
     def action_call_llm(
         agent, 
         *,
-        model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
+        #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
+        model:DEFAULT_MODEL,
         messages: typing.List[typing.Dict[str, str]], 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
