@@ -1,6 +1,9 @@
 import os
+import json
 from typing import Literal
 from openai import OpenAI
+from datetime import datetime
+
 
 #USING OPEN AI MODELS
 
@@ -48,3 +51,24 @@ NON_SOLVER_MODELS = [
     model for model in ModelType.__args__ if model != SOLVER_MODEL
 ]
 
+
+def log_model_input_output(kwargs, response, model):
+    # Get the current date and time for the filename
+    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"../tmp/_{current_time}_{model.replace("/", "_")}.txt"
+    
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    # Prepare the content to write to the file
+    log_data = {
+        "input": json.dumps(kwargs, indent=2),  # Format input as a pretty-printed JSON string
+        "output": json.dumps(response, indent=2)  # Format output as a pretty-printed JSON string
+    }
+
+    # Write the input and output to the file
+    with open(filename, 'w') as f:
+        f.write("Input:\n")
+        f.write(log_data["input"] + "\n\n")
+        f.write("Output:\n")
+        f.write(log_data["output"] + "\n")

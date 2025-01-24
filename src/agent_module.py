@@ -15,7 +15,7 @@ import contextlib
 import collections
 import openai
 import logic
-from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL
+from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL,log_model_input_output
 
 
 action_counter = collections.defaultdict(int)
@@ -130,7 +130,9 @@ def action_adjust_logic(module_name: str, target_name: str, new_code=str, target
         if target_name == "solver":
             #if "gpt-4o" in new_code:
             if EVOLVE_MODEL in new_code:
-                raise ValueError("ONLY model **gpt-3.5-turbo** can be used in solver.")
+                #raise ValueError("ONLY model **gpt-3.5-turbo** can be used in solver.")
+                raise ValueError(f"ONLY model **{SOLVER_MODEL}** can be used in solver.")
+
             if "time.sleep" in new_code:
                 raise ValueError("Don't use `time.sleep` in solver.")
         if target_name == "Agent.action_call_llm":
@@ -716,6 +718,9 @@ class Agent(AgentBase):
 
             response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
             
+            #TODO: Temp for Debugging
+            log_model_input_output(kwargs, response, model);
+
             def try_parse_json(content):
                 try:
                     return json.loads(content)

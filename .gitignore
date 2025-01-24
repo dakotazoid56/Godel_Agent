@@ -9,4 +9,7 @@ __pycache__/
 .env
 
 # Ignore Run and Debug Scripts
-#.vscode/
+.vscode/
+
+# Temp File For Debugging
+/tmp
