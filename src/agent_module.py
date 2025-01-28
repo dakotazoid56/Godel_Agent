@@ -319,18 +319,15 @@ def action_evaluate_on_task(task, solver):
     return feedback
 
 class Agent(AgentBase):
-    def __init__(agent, api_key=None, goal_prompt_path='goal_prompt.md', key_path='key.env'):
+    def __init__(agent, goal_prompt_path='goal_prompt.md', key_path='key.env'):
         # Load configurations
         agent.goal_prompt = open(goal_prompt_path, 'r').read()
         agent.goal_task = task_mgsm.MGSM_Task()
-        if api_key is None:
-            api_key = open(key_path, 'r').read().strip()
-        openai.api_key = api_key
+        
         #agent.client = openai.OpenAI(api_key=api_key)
         agent.client = get_openai_instance()
 
         # Initialize optimization history and iterations
-
         agent.action_functions = [
             {
                 "type": "function",
@@ -542,39 +539,40 @@ class Agent(AgentBase):
         for tool_call in actions['tool_calls']:
             print("tool call:", tool_call, end="\n\n")
             try:
-                action_counter[tool_call['function']['name']] += 1
-                arguments = json.loads(tool_call['function']['arguments']) if tool_call['function']['arguments'] else {}
-                if tool_call['function']['name'] == "action_display_analysis":
+                action_counter[tool_call['name']] += 1
+                #arguments = json.loads(tool_call['args']) if tool_call['args'] else {}
+                arguments = tool_call['args']
+                if tool_call['name'] == "action_display_analysis":
                     result = action_display_analysis(**arguments)
 
-                elif tool_call['function']['name'] == "action_environment_aware":
+                elif tool_call['name'] == "action_environment_aware":
                     result = action_environment_aware(agent, **arguments)
 
-                elif tool_call['function']['name'] == "action_read_logic":
+                elif tool_call['name'] == "action_read_logic":
                     result = action_read_logic(**arguments)
 
-                elif tool_call['function']['name'] == "action_adjust_logic":
+                elif tool_call['name'] == "action_adjust_logic":
                     result = action_adjust_logic(**arguments)
 
-                elif tool_call['function']['name'] == "action_run_code":
+                elif tool_call['name'] == "action_run_code":
                     result = action_run_code(**arguments)
                     if arguments.get("code_type", None) == "python" and "self_evolving_agent.reinit()" in arguments.get("code", ""):
                         is_reinit = True
-                elif tool_call['function']['name'] == "action_call_llm":
+                elif tool_call['name'] == "action_call_llm":
                     result = agent.action_call_llm(**arguments)
                     print(result[0])
 
-                elif tool_call['function']['name'] == 'action_call_json_format_llm':
+                elif tool_call['name'] == 'action_call_json_format_llm':
                     result = agent.action_call_json_format_llm(**arguments)
                     try:
                         print(json.loads(result[0]))
                     except:
                         print(result[0])
 
-                elif tool_call['function']['name'] == "action_evaluate_on_task":
+                elif tool_call['name'] == "action_evaluate_on_task":
                     result = action_evaluate_on_task(agent.goal_task, functools.partial(solver, agent))
                 else:
-                    raise ValueError(f"Unknown function name: {tool_call['function']['name']}")
+                    raise ValueError(f"Unknown function name: {tool_call['name']}")
 
             except Exception as e:
                 action_counter["error_handle"] += 1
@@ -608,6 +606,10 @@ class Agent(AgentBase):
         tool_call_ids = set()
         remain_optimize_history = []
         for message in agent.optimize_history[-10:]:
+            # Ensure the "role" field exists and initialize if not present (Langchain doesn't output role)
+            if "role" not in message:
+                message["role"] = "assistant"
+
             if message["role"] == "assistant" and message["tool_calls"]:
                 tool_call_ids = set()
                 for tool_call in message["tool_calls"]:
@@ -631,8 +633,10 @@ class Agent(AgentBase):
                 print(message)
             sys.exit(1)
         
-        agent.optimize_history.append(response[0])
-        agent.execute_action(response[0])
+        agent.optimize_history.append(response)
+        agent.execute_action(response)
+        #agent.optimize_history.append(response[0])
+        #agent.execute_action(response[0])
 
     def action_call_json_format_llm(
         agent,
@@ -704,33 +708,41 @@ class Agent(AgentBase):
                 message["content"] = str(message["content"])
             
             kwargs = {
-                "n": n,
+                #"n": n,
                 "model": model,
-                "messages": messages,
-                "response_format": {"type": response_format if response_format == "json_object" else "text"}, 
+                #"messages": messages,
+                #"response_format": {"type": response_format if response_format == "json_object" else "text"}, 
                 "temperature": temperature,
                 "max_completion_tokens": max_completion_tokens
             }
 
             if tools is not None:
+                agent.client = agent.client.bind_tools(tools=tools, tool_choice=tool_choice)
+
                 kwargs["tools"] = tools
                 kwargs["tool_choice"] = tool_choice
 
-            response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
-            
+            #response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
+            response_initial = agent.client.invoke(input=messages)
+
+            response = response_initial.model_dump()
+
+            #response = agent.client.invoke(input=messages, kwargs=kwargs).model_dump()
+
             #TODO: Temp for Debugging
-            log_model_input_output(kwargs, response, model);
+            log_model_input_output(kwargs, response, model)
 
-            def try_parse_json(content):
-                try:
-                    return json.loads(content)
-                except:
-                    return {"JSONDecodeError": content}
-
-            if response_format == "text":
-                return [choice["message"] for choice in response["choices"]]
-            else:
-                return [try_parse_json(choice["message"]["content"]) for choice in response["choices"]]
+            return response
+            #def try_parse_json(content):
+            #    try:
+            #        return json.loads(content)
+            #    except:
+            #        return {"JSONDecodeError": content}
+            #
+            #if response_format == "text":
+            #    return [choice["message"] for choice in response["choices"]]
+            #else:
+            #    return [try_parse_json(choice["message"]["content"]) for choice in response["choices"]]
         except Exception as e:
             raise e
         
