@@ -7,7 +7,7 @@ from typing import Literal
 from openai import OpenAI
 from datetime import datetime
 
-"""
+
 #Using COHERE Models
 ModelType = Literal["command-r7b-12-2024"]
 DEFAULT_MODEL: ModelType = "command-r7b-12-2024"
@@ -19,16 +19,16 @@ def get_openai_instance():
     return ChatCohere(api_key=api_key, model="command-r7b-12-2024")
 
 
-"""
-#USING OPEN AI MODELS
-ModelType = Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"]
-DEFAULT_MODEL: ModelType = "gpt-4o-mini"
-SOLVER_MODEL: Literal["gpt-3.5-turbo"] = "gpt-3.5-turbo"
-EVOLVE_MODEL: Literal["gpt-4o"] = "gpt-4o"
-def get_openai_instance():
-    api_key = api_key = os.getenv("OPENAI_API_KEY")
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(api_key=api_key)
+
+# #USING OPEN AI MODELS
+# ModelType = Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"]
+# DEFAULT_MODEL: ModelType = "gpt-4o-mini"
+# SOLVER_MODEL: Literal["gpt-3.5-turbo"] = "gpt-3.5-turbo"
+# EVOLVE_MODEL: Literal["gpt-4o"] = "gpt-4o"
+# def get_openai_instance():
+#     api_key = api_key = os.getenv("OPENAI_API_KEY")
+#     from langchain_openai import ChatOpenAI
+#     return ChatOpenAI(api_key=api_key)
 
 
 

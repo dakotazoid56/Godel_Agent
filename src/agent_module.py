@@ -16,6 +16,7 @@ import collections
 import openai
 import logic
 from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL,log_model_input_output
+from langchain_core.tools import tool
 
 
 action_counter = collections.defaultdict(int)
@@ -27,9 +28,15 @@ class AgentBase:
     def action_call_llm(agent, *args, **kwargs):
         raise NotImplementedError("action_call_llm hasn't been implemented")
 
+
 def action_display_analysis(analysis):
+    """
+    Display an analysis of the current state, including available resources, logic (of solver or other actions) and evaluation feedbacks from the 
+    target task, and reasons or plans for the next actions based on this analysis."
+    """
     print(analysis, "\n\n")
     return "Analysis Received. Just do it!"
+
 
 def action_environment_aware(agent: AgentBase):
     """
@@ -75,6 +82,7 @@ def action_environment_aware(agent: AgentBase):
 
     return "\n".join(summary).strip()
 
+
 def action_read_logic(module_name: str, target_name: str):
     """
     Reads the source code of the specified logic (function, method, or class) within a given module.
@@ -106,7 +114,8 @@ def action_read_logic(module_name: str, target_name: str):
     
     except Exception as e:
         raise e
-    
+
+
 def action_adjust_logic(module_name: str, target_name: str, new_code=str, target_type: str = 'function', operation: str = 'modify'):
     """
     Modify/Add/Delete the source code of the specified logic (function, method, or class) within a given module to 
@@ -195,6 +204,7 @@ def action_adjust_logic(module_name: str, target_name: str, new_code=str, target
         raise ValueError(f"Unknown operation '{operation}'. Expected 'modify', 'add', or 'delete'.")
 
     return f"Successfully {operation} `{module_name}.{_target_name}`."
+
 
 def action_run_code(code_type: str, code: str, timeout: float = 30.0) -> str:
     """
@@ -717,10 +727,69 @@ class Agent(AgentBase):
             }
 
             if tools is not None:
-                agent.client = agent.client.bind_tools(tools=tools, tool_choice=tool_choice)
+                from langchain.tools import Tool
+                from pydantic import create_model
 
-                kwargs["tools"] = tools
-                kwargs["tool_choice"] = tool_choice
+                langchain_tools = []
+                for tool in tools:
+                    func_def = tool['function']
+                    
+                    # Get the function - handle both global functions and class methods
+                    if func_def['name'].startswith('action_call_'):
+                        # For class methods, create a closure to maintain the instance reference
+                        def create_method_caller(method_name):
+                            return lambda *args, **kwargs: getattr(agent, method_name)(*args, **kwargs)
+                        func = create_method_caller(func_def['name'])
+                    else:
+                        # For global functions
+                        func = globals()[func_def['name']]
+
+                    # Rest of the tool creation code remains the same
+                    if 'parameters' in func_def and 'properties' in func_def['parameters']:
+                        fields = {}
+                        for prop_name, prop_def in func_def['parameters']['properties'].items():
+                            field_type = str  # default type
+                            if 'type' in prop_def:
+                                if prop_def['type'] == 'number':
+                                    field_type = float
+                                elif prop_def['type'] == 'integer':
+                                    field_type = int
+                                elif prop_def['type'] == 'boolean':
+                                    field_type = bool
+                                elif prop_def['type'] == 'array':
+                                    field_type = list
+                                elif prop_def['type'] == 'object':
+                                    field_type = dict
+                            
+                            is_required = prop_name in func_def['parameters'].get('required', [])
+                            if is_required:
+                                fields[prop_name] = (field_type, ...)
+                            else:
+                                fields[prop_name] = (field_type, None)
+
+                        model_name = f"{func_def['name'].title()}Parameters"
+                        args_schema = create_model(model_name, **fields)
+                    else:
+                        args_schema = None
+
+                    tool = Tool(
+                        name=func_def['name'],
+                        description=func_def['description'],
+                        func=func,
+                        args_schema=args_schema
+                    )
+                    langchain_tools.append(tool)
+
+                agent.client = agent.client.bind_tools(tools=langchain_tools, tool_choice=tool_choice)
+
+                # Store tools in separate dict
+                tool_kwargs = {
+                    "tools": [{"name": t.name, "description": t.description} for t in langchain_tools],
+                    "tool_choice": tool_choice
+                }
+
+                #kwargs["tools"] = langchain_tools
+                #kwargs["tool_choice"] = tool_choice
 
             #response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
             response_initial = agent.client.invoke(input=messages)
@@ -730,7 +799,9 @@ class Agent(AgentBase):
             #response = agent.client.invoke(input=messages, kwargs=kwargs).model_dump()
 
             #TODO: Temp for Debugging
-            log_model_input_output(kwargs, response, model)
+            #log_model_input_output(kwargs, response, model)
+            loggable_kwargs = {**kwargs, **tool_kwargs}
+            log_model_input_output(loggable_kwargs, response, model)
 
             return response
             #def try_parse_json(content):
@@ -745,5 +816,6 @@ class Agent(AgentBase):
             #    return [try_parse_json(choice["message"]["content"]) for choice in response["choices"]]
         except Exception as e:
             raise e
+
         
 self_evolving_agent = Agent()
