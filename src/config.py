@@ -7,7 +7,7 @@ from typing import Literal
 from openai import OpenAI
 from datetime import datetime
 
-"""
+
 #Using COHERE Models
 ModelType = Literal["command-r7b-12-2024"]
 DEFAULT_MODEL: ModelType = "command-r7b-12-2024"
@@ -16,7 +16,7 @@ EVOLVE_MODEL: Literal["command-r7b-12-2024"] = "command-r7b-12-2024"
 def get_openai_instance():
     api_key = api_key = os.getenv("COHERE_API_KEY")
     from langchain_cohere import ChatCohere
-    return ChatCohere(api_key=api_key, model="command-r7b-12-2024")
+    return ChatCohere(api_key=api_key, model="command-r7b-12-2024"), "COHERE"
 
 
 """
@@ -28,8 +28,8 @@ EVOLVE_MODEL: Literal["gpt-4o"] = "gpt-4o"
 def get_openai_instance():
     api_key = api_key = os.getenv("OPENAI_API_KEY")
     from langchain_openai import ChatOpenAI
-    return ChatOpenAI(api_key=api_key)
-
+    return ChatOpenAI(api_key=api_key), "OPENAI"
+"""
 
 
 """
@@ -81,10 +81,13 @@ def log_model_input_output(kwargs, response, model):
     # Add unique identifier at end... as there is many threads that spawn and run
     unique_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
-    filename = f"../tmp/run4/_{current_time}_{model_name}_{unique_suffix}.txt"
+    filename = f"../tmp/run7/_{current_time}_{model_name}_{unique_suffix}.txt"
     
     # Ensure the directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    if kwargs == None:
+        kwargs = {}
 
     # Prepare the content to write to the file
     log_data = {

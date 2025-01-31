@@ -16,6 +16,12 @@ import collections
 import openai
 import logic
 from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL,log_model_input_output
+from langchain_core.messages import (
+    HumanMessage,
+    ToolMessage,
+)
+from langchain_core.tools import tool
+
 
 
 action_counter = collections.defaultdict(int)
@@ -27,7 +33,9 @@ class AgentBase:
     def action_call_llm(agent, *args, **kwargs):
         raise NotImplementedError("action_call_llm hasn't been implemented")
 
-def action_display_analysis(analysis):
+#@tool
+def action_display_analysis(analysis: dict) -> str:
+    "TODO: Display Action Analytics"
     print(analysis, "\n\n")
     return "Analysis Received. Just do it!"
 
@@ -305,7 +313,7 @@ def solver(agent, task: str):
     return return_dict
 
 
-def action_evaluate_on_task(task, solver):
+def action_evaluate_on_task(task, solver) -> str:
     """
     Evaluate the current solver on the goal task samples and return the evaluation feedback.
 
@@ -318,6 +326,7 @@ def action_evaluate_on_task(task, solver):
         task_mgsm.last_test_acc = acc
     return feedback
 
+
 class Agent(AgentBase):
     def __init__(agent, goal_prompt_path='goal_prompt.md', key_path='key.env'):
         # Load configurations
@@ -325,8 +334,9 @@ class Agent(AgentBase):
         agent.goal_task = task_mgsm.MGSM_Task()
         
         #agent.client = openai.OpenAI(api_key=api_key)
-        agent.client = get_openai_instance()
+        agent.client, agent.client_name = get_openai_instance()
 
+        """
         # Initialize optimization history and iterations
         agent.action_functions = [
             {
@@ -516,7 +526,21 @@ class Agent(AgentBase):
                 }
             }
         ]
+        """
 
+        
+        
+        
+        agent.action_functions = [
+            action_display_analysis,
+            #action_environment_aware,
+            #action_read_logic,
+            #action_adjust_logic,
+            #action_run_code,
+            #action_call_json_format_llm,
+            #action_evaluate_on_task
+        ]
+        
         agent.optimize_history = []
 
     def reinit(agent):
@@ -620,9 +644,55 @@ class Agent(AgentBase):
             remain_optimize_history.append(message)
         agent.optimize_history = remain_optimize_history
 
-        messages = [{"role": "system", "name": "Principles", "content": agent.goal_prompt}, 
-                    {"role": "system", "name": "Environment", "content": action_environment_aware(agent)},
-                    *agent.optimize_history]
+        #messages = [{"role": "system", "name": "Principles", "content": agent.goal_prompt}, 
+        #            {"role": "system", "name": "Environment", "content": action_environment_aware(agent)},
+        #            *agent.optimize_history]
+        
+        # Refining for Cohere
+
+        # Convert the prompt and environemnt to System messsages
+        from langchain_core.messages import (HumanMessage,ToolMessage,SystemMessage,AIMessage, ToolCall)
+        messages = [
+            SystemMessage(content=agent.goal_prompt),
+            SystemMessage(content=action_environment_aware(agent)),
+            #HumanMessage(content=agent.optimize_history[0]['content'])
+        ]
+
+        #Conver the messages in optimize history to proper message format
+        for m in agent.optimize_history:
+            if m['role'] == 'tool':
+                messages.append(ToolMessage(content=m["content"], tool_call_id=m['tool_call_id']))
+            elif m['role'] == 'user':
+                messages.append(HumanMessage(content=m['content']))
+            else:
+                #m['role'] == 'assistant':
+                #if m['tool_calls'] == []:
+                    #Actually Telling the Agent that its previous response is a human response
+                messages.append(HumanMessage(content=m['content']))
+                #else:
+                #    tool_call = m['tool_calls'][0]
+                #    messages.append(ToolCall(tool_call))
+
+                #Actually Telling the Agent that its previous response is a human response
+                #messages.append(AIMessage(content=m['content']))
+                #messages.append(HumanMessage(content=m['content']))
+                
+
+
+
+
+
+        # Now extend with agent.optimize_history, removing any 'name' fields
+        #for msg in agent.optimize_history:
+        #    # Typically, these messages might look like {"role": "user", "content": "..."} 
+        #    # but if they also have "name", remove/ignore it for Cohere:
+        #    role = msg.get("role", "assistant")  # default to assistant if missing
+        #    content = msg.get("content", "")
+            
+        #    cohere_messages.append({"role": role, "content": content})
+
+        # End Special Cohere Messages
+
         try:
             #response = agent.action_call_llm(messages=messages, model="gpt-4o", response_format="text", tools=agent.action_functions, tool_choice="required")
             response = agent.action_call_llm(messages=messages, model=EVOLVE_MODEL, response_format="text", tools=agent.action_functions, tool_choice="required")
@@ -702,35 +772,44 @@ class Agent(AgentBase):
             if response_format == "json":
                 response_format = "json_object"
             
-            import copy
-            messages = copy.deepcopy(messages)
-            for message in messages:
-                message["content"] = str(message["content"])
             
-            kwargs = {
-                #"n": n,
-                "model": model,
-                #"messages": messages,
-                #"response_format": {"type": response_format if response_format == "json_object" else "text"}, 
-                "temperature": temperature,
-                "max_completion_tokens": max_completion_tokens
-            }
+            #kwargs = {
+            #    #"n": n,
+            #    "model": model,
+            #    #"messages": messages,
+            #    #"response_format": {"type": response_format if response_format == "json_object" else "text"}, 
+            #    "temperature": temperature,
+            #    "max_completion_tokens": max_completion_tokens
+            #}
 
-            if tools is not None:
-                agent.client = agent.client.bind_tools(tools=tools, tool_choice=tool_choice)
+            if agent.client_name == "COHERE":
 
-                kwargs["tools"] = tools
-                kwargs["tool_choice"] = tool_choice
+                #tools = [action_display_analysis]
 
-            #response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
-            response_initial = agent.client.invoke(input=messages)
+                llm_with_tools = agent.client.bind_tools(tools)
 
-            response = response_initial.model_dump()
+                #query = "What is 3 * 12?"
+                
+                response_initial = llm_with_tools.invoke(input=messages)
+                response = response_initial.model_dump()
+                
+
+            else:
+                import copy
+                messages = copy.deepcopy(messages)
+                for message in messages:
+                    message["content"] = str(message["content"])
+                    if tools is not None:
+                        agent.client = agent.client.bind_tools(tools=tools, tool_choice=tool_choice)
+
+                #response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
+                response_initial = agent.client.invoke(input=messages)
+                response = response_initial.model_dump()
 
             #response = agent.client.invoke(input=messages, kwargs=kwargs).model_dump()
 
             #TODO: Temp for Debugging
-            log_model_input_output(kwargs, response, model)
+            log_model_input_output(None, response, model)
 
             return response
             #def try_parse_json(content):
