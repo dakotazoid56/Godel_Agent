@@ -5,6 +5,7 @@ import random
 from typing import Literal
 from openai import OpenAI
 from datetime import datetime
+import cohere
 
 
 #USING OPEN AI MODELS
@@ -20,8 +21,20 @@ def get_openai_instance():
     return OpenAI(api_key=api_key)
 """
 
+#Using COHERE Models
+ModelType = Literal["command-r7b-12-2024"]
+DEFAULT_MODEL: ModelType = "command-r7b-12-2024"
+SOLVER_MODEL: Literal["command-r7b-12-2024"] = "command-r7b-12-2024"
+EVOLVE_MODEL: Literal["command-r7b-12-2024"] = "command-r7b-12-2024"
+def get_openai_instance():
+    api_key = api_key = os.getenv("COHERE_API_KEY")
+    #from langchain_cohere import ChatCohere
+    #return ChatCohere(api_key=api_key, model="command-r7b-12-2024")
+    return cohere.ClientV2(api_key=api_key)
 
 
+
+"""
 #USING AVIOR AI MODELS
 
 #Testing Done in tmp/run3
@@ -46,7 +59,7 @@ def get_openai_instance():
     api_key = os.getenv("AVIOR_API_KEY")
     base = "http://avior.mlfoundry.com/live-inference/v1"
     return OpenAI(api_key=api_key, base_url=base)
-
+"""
 
 
 # Common for Both

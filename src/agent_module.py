@@ -15,6 +15,7 @@ import contextlib
 import collections
 import openai
 import logic
+import cohere
 from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL,log_model_input_output
 
 
@@ -318,6 +319,8 @@ def action_evaluate_on_task(task, solver):
         task_mgsm.last_test_acc = acc
     return feedback
 
+
+
 class Agent(AgentBase):
     def __init__(agent, api_key=None, goal_prompt_path='goal_prompt.md', key_path='key.env'):
         # Load configurations
@@ -325,11 +328,9 @@ class Agent(AgentBase):
         agent.goal_task = task_mgsm.MGSM_Task()
         if api_key is None:
             api_key = open(key_path, 'r').read().strip()
-        openai.api_key = api_key
+        #openai.api_key = api_key
         #agent.client = openai.OpenAI(api_key=api_key)
         agent.client = get_openai_instance()
-
-        # Initialize optimization history and iterations
 
         agent.action_functions = [
             {
@@ -345,10 +346,8 @@ class Agent(AgentBase):
                                 "description": "A detailed analysis of the current state, including reasons or plans for the following actions."
                             }
                         },
-                        "required": ["analysis"],
-                        "additionalProperties": False,
-                    },
-                    "strict": True
+                        "required": ["analysis"]
+                    }
                 }
             },
             {
@@ -359,10 +358,8 @@ class Agent(AgentBase):
                     "parameters": {
                         "type": "object",
                         "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": []
+                    }
                 }
             },
             {
@@ -382,10 +379,8 @@ class Agent(AgentBase):
                                 "description": "The name of the function, method, or class to read. If the target_name contains a dot, it refers to a method within a class (e.g., 'Agent.action_call_llm')."
                             }
                         },
-                        "required": ["module_name", "target_name"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["module_name", "target_name"]
+                    }
                 }
             },
             {
@@ -419,10 +414,8 @@ class Agent(AgentBase):
                                 "description": "The operation to perform."
                             }
                         },
-                        "required": ["module_name", "target_name", "new_code", "target_type", "operation"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["module_name", "target_name", "new_code", "target_type", "operation"]
+                    }
                 }
             },
             {
@@ -443,10 +436,8 @@ class Agent(AgentBase):
                                 "description": "The code to execute as a string."
                             }
                         },
-                        "required": ["code_type", "code"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["code_type", "code"]
+                    }
                 }
             },
             {
@@ -473,8 +464,7 @@ class Agent(AgentBase):
                                         },
                                         "content": {"type": "string"}
                                     },
-                                    "required": ["role", "content"],
-                                    "additionalProperties": False
+                                    "required": ["role", "content"]
                                 },
                                 "description": "A list of messages comprising the conversation so far."
                             },
@@ -498,10 +488,8 @@ class Agent(AgentBase):
                                 "description": "A string that specifies the conditions required to perform a call to the LLM."
                             }
                         },
-                        "required": ["model", "messages", "temperature", "role", "return_dict_keys", "requirements"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["model", "messages", "temperature", "role", "return_dict_keys", "requirements"]
+                    }
                 }
             },
             {
@@ -512,10 +500,8 @@ class Agent(AgentBase):
                     "parameters": {
                         "type": "object",
                         "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": []
+                    }
                 }
             }
         ]
@@ -704,22 +690,25 @@ class Agent(AgentBase):
                 message["content"] = str(message["content"])
             
             kwargs = {
-                "n": n,
+                #"n": n,
                 "model": model,
                 "messages": messages,
-                "response_format": {"type": response_format if response_format == "json_object" else "text"}, 
-                "temperature": temperature,
-                "max_completion_tokens": max_completion_tokens
+                #"response_format": {"type": response_format if response_format == "json_object" else "text"}, 
+                #"temperature": temperature,
+                #"max_completion_tokens": max_completion_tokens
             }
 
             if tools is not None:
                 kwargs["tools"] = tools
-                kwargs["tool_choice"] = tool_choice
+                #kwargs["tool_choice"] = tool_choice
 
-            response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
+            #response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
+            response = agent.client.chat(model = "command-r-plus-08-2024", messages = messages, tools = tools)
+
+
             
             #TODO: Temp for Debugging
-            log_model_input_output(kwargs, response, model);
+            log_model_input_output(kwargs, response, model)
 
             def try_parse_json(content):
                 try:
