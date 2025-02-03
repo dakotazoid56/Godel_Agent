@@ -80,7 +80,7 @@ def log_model_input_output(kwargs, response, model):
     # Add unique identifier at end... as there is many threads that spawn and run
     unique_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
-    filename = f"../tmp/run3/_{current_time}_{model_name}_{unique_suffix}.txt"
+    filename = f"../tmp/run9/_{current_time}_{model_name}_{unique_suffix}.txt"
     
     # Ensure the directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)

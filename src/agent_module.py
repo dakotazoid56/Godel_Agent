@@ -320,6 +320,75 @@ def action_evaluate_on_task(task, solver):
     return feedback
 
 
+def cohere_to_openai_format(cohere_response):
+    """
+    Convert a Cohere ChatResponse to OpenAI's response format.
+    
+    Args:
+        cohere_response: Cohere ChatResponse object
+        
+    Returns:
+        dict: Response formatted in OpenAI structure
+    """
+    # Format the message content
+    message = {
+        "role": cohere_response.message.role,
+        "content": cohere_response.message.content,
+        "refusal": None
+    }
+    
+    # Add tool_calls if present
+    if cohere_response.message.tool_calls:
+        message["tool_calls"] = [
+            {
+                "id": tool_call.id,
+                "type": tool_call.type,
+                "function": {
+                    "name": tool_call.function.name,
+                    "arguments": tool_call.function.arguments
+                }
+            }
+            for tool_call in cohere_response.message.tool_calls
+        ]
+    
+    # Create the OpenAI-style response structure
+    openai_format = {
+        "id": cohere_response.id,
+        "choices": [
+            {
+                "finish_reason": cohere_response.finish_reason.lower(),
+                "index": 0,
+                "logprobs": cohere_response.logprobs,
+                "message": message
+            }
+        ],
+        "created": None,  # Cohere doesn't provide this
+        "model": None,    # Cohere doesn't provide this
+        "object": "chat.completion",
+        "service_tier": "default",
+        "system_fingerprint": None,
+        "usage": {
+            "completion_tokens": cohere_response.usage.tokens.output_tokens,
+            "prompt_tokens": cohere_response.usage.tokens.input_tokens,
+            "total_tokens": (
+                cohere_response.usage.tokens.input_tokens + 
+                cohere_response.usage.tokens.output_tokens
+            ),
+            "completion_tokens_details": {
+                "accepted_prediction_tokens": 0,
+                "audio_tokens": 0,
+                "reasoning_tokens": 0,
+                "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+                "audio_tokens": 0,
+                "cached_tokens": 0
+            }
+        }
+    }
+    
+    return openai_format
+
 
 class Agent(AgentBase):
     def __init__(agent, api_key=None, goal_prompt_path='goal_prompt.md', key_path='key.env'):
@@ -449,6 +518,7 @@ class Agent(AgentBase):
                         "type": "object",
                         "properties": {
                             "model": {
+                                "type": "string",
                                 #"enum": ["gpt-4o-mini", "gpt-4o"],
                                 "enum": NON_SOLVER_MODELS,
 
@@ -619,6 +689,7 @@ class Agent(AgentBase):
         
         agent.optimize_history.append(response[0])
         agent.execute_action(response[0])
+    
 
     def action_call_json_format_llm(
         agent,
@@ -688,27 +759,24 @@ class Agent(AgentBase):
             messages = copy.deepcopy(messages)
             for message in messages:
                 message["content"] = str(message["content"])
-            
+
             kwargs = {
-                #"n": n,
                 "model": model,
                 "messages": messages,
-                #"response_format": {"type": response_format if response_format == "json_object" else "text"}, 
-                #"temperature": temperature,
-                #"max_completion_tokens": max_completion_tokens
+                "response_format": {"type": response_format if response_format == "json_object" else "text"}, 
+                "temperature": temperature,
+                "max_tokens": max_completion_tokens
             }
 
             if tools is not None:
                 kwargs["tools"] = tools
-                #kwargs["tool_choice"] = tool_choice
+                kwargs["tool_choice"] = tool_choice
 
-            #response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
-            response = agent.client.chat(model = "command-r-plus-08-2024", messages = messages, tools = tools)
-
-
+            # Make the API call
+            response = agent.client.chat(**kwargs)
             
-            #TODO: Temp for Debugging
-            log_model_input_output(kwargs, response, model)
+            formatted_response = cohere_to_openai_format(response)
+            log_model_input_output(kwargs, formatted_response, model)
 
             def try_parse_json(content):
                 try:
@@ -717,9 +785,10 @@ class Agent(AgentBase):
                     return {"JSONDecodeError": content}
 
             if response_format == "text":
-                return [choice["message"] for choice in response["choices"]]
+                return [choice["message"] for choice in formatted_response["choices"]]
             else:
-                return [try_parse_json(choice["message"]["content"]) for choice in response["choices"]]
+                return [try_parse_json(choice["message"]["content"]) for choice in formatted_response["choices"]]
+    
         except Exception as e:
             raise e
         
