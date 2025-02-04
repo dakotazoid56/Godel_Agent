@@ -12,13 +12,15 @@ import cohere
 
 
 """
-ModelType = Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"]
-DEFAULT_MODEL: ModelType = "gpt-4o-mini"
-SOLVER_MODEL: Literal["gpt-3.5-turbo"] = "gpt-3.5-turbo"
-EVOLVE_MODEL: Literal["gpt-4o"] = "gpt-4o"
+ModelType = Literal["command-r7b-12-2024", "command-r7b-12-2024", "command-r7b-12-2024"]
+DEFAULT_MODEL: ModelType = "command-r7b-12-2024"
+SOLVER_MODEL: Literal["command-r7b-12-2024"] = "command-r7b-12-2024"
+EVOLVE_MODEL: Literal["command-r7b-12-2024"] = "command-r7b-12-2024"
 def get_openai_instance():
     api_key = api_key = os.getenv("OPENAI_API_KEY")
     return OpenAI(api_key=api_key)
+"""
+
 """
 
 #Using COHERE Models
@@ -31,7 +33,7 @@ def get_openai_instance():
     #from langchain_cohere import ChatCohere
     #return ChatCohere(api_key=api_key, model="command-r7b-12-2024")
     return cohere.ClientV2(api_key=api_key)
-
+"""
 
 
 """
@@ -65,9 +67,9 @@ def get_openai_instance():
 # Common for Both
 
 # Non-solver models (all models minus the solver model)
-NON_SOLVER_MODELS = [
-    model for model in ModelType.__args__ if model != SOLVER_MODEL
-]
+#NON_SOLVER_MODELS = [
+ #   model for model in ModelType.__args__ if model != SOLVER_MODEL
+#]
 
 
 def log_model_input_output(kwargs, response, model):

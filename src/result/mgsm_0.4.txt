@@ -1,0 +1,80 @@
+95% Bootstrap Confidence Interval: (10.0%, 70.0%), Median: 40.0%Sample 0:
+แก้ปัญหาคณิตศาสตร์นี้
+
+พ่อค้าคนหนึ่งต้องเลือกระหว่างแผนการซื้อ 2 แผน ได้แก่ เครื่องประดับมูลค่า $5,000 หรืออุปกรณ์อิเล็กทรอนิกส์มูลค่า $8,000 ที่ปรึกษาด้านการเงินของเขาคาดการณ์ว่าตลาดเครื่องประดับจะมีมูลค่าสูงขึ้น 2.5% ส่วนตลาดอุปกรณ์อิเล็กทรอนิกส์จะมีมูลค่าสูงขึ้น 1.2% ภายในเดือนเดียวกัน ถ้าพ่อค้าต้องการเลือกแผนที่ทำกำไรสูงสุดภายในสิ้นเดือนนี้ พ่อค้าจะได้กำไรกี่ดอลลาร์
+Model Output: {'reasoning': 'To determine which plan will yield the highest profit within the same month, we need to calculate the profit for each plan and compare them. We will assume the initial cost of each item and the percentage increase in value over the month.', 'answer': '300'}
+Model Answer: 300
+Correct Answer: 125
+Is Correct: False
+Sample 1:
+解决这个数学问题。
+
+罗素在一家宠物店工作，并且正在给啮齿动物分配秸秆。老鼠以每组相同的数量关在 3 个笼子里，每只老鼠分到 6 根秸秆。仓鼠单独关在 10 个笼子里，每只仓鼠分到 5 根秸秆。此外还有一笼兔子，它们分到了 20 根秸秆。宠物店里的任何其他地方都不使用秸秆。如果 160 根秸秆分给了小啮齿动物，每个笼子里有多少只老鼠？
+Model Output: {'reasoning': '首先，我们需要确定仓鼠的数量。我们知道每只仓鼠分到 5 根秸秆，而仓鼠总共分到了 160 - 20 = 140 根秸秆。因此，仓鼠的数量为 140 / 5 = 28。接下来，我们需要确定老鼠的数量。我们知道每只老鼠分到 6 根秸秆，而老鼠总共分到了 160 - 140 = 20 根秸秆。因此，老鼠的数量为 20 / 6 = 3.33。由于每个笼子里老鼠的数量必须是整数，因此我们需要找到 20 除以 6 的余数。20 除以 6 的余数为 2。因此，每个笼子里有 3 + 2 = 5 只老鼠。', 'answer': '5'}
+Model Answer: 5
+Correct Answer: 5
+Is Correct: True
+Sample 2:
+Löse dieses Mathematikproblem.
+
+Jerry hat eine Hühnerschar. Die roten Hennen legen 3 Eier pro Tag und die weißen Hennen legen 5 Eier pro Tag. Jeden Tag sammelt Jerry 42 Eier ein. Wenn er zwei weiße Hennen mehr hat als rote Hennen, wie viele rote Hennen hat er dann?
+Model Output: {'reasoning': "Lassen Sie uns die Anzahl der roten Hühner als 'r' und die Anzahl der weißen Hühner als 'w' darstellen. Wir wissen, dass die roten Hühner 3 Eier pro Tag legen, also legen die roten Hühner 3r Eier pro Tag. Wir wissen auch, dass die weißen Hühner 5 Eier pro Tag legen, also legen die weißen Hühner 5w Eier pro Tag. Jerry sammelt jeden Tag 42 Eier ein, also 3r + 5w = 42. Wir wissen auch, dass Jerry zwei weiße Hühner mehr hat als rote Hühner, also w = r + 2. Wenn wir diesen Wert von w in die erste Gleichung einsetzen, erhalten wir 3r + 5(r + 2) = 42. Wenn wir die Gleichung vereinfachen, erhalten wir 3r + 5r + 10 = 42. Wenn wir ähnliche Terme kombinieren, erhalten wir 8r + 10 = 42. Wenn wir 10 von beiden Seiten subtrahieren, erhalten wir 8r = 32. Wenn wir beide Seiten durch 8 dividieren, erhalten wir r = 4. Daher hat Jerry 4 rote Hühner.", 'answer': '4'}
+Model Answer: 4
+Correct Answer: 4
+Is Correct: True
+Sample 3:
+解决这个数学问题。
+
+史蒂芬在网上下单购买生活用品。他的最终账单金额是 40.00 美元。因为这笔订单通过送货供应商进行，他们在他的最终账单总额上加上了 25% 的费用，并对他收取了 3.00 美元的送货费。史蒂芬还加上了 4.00 美元的小费。在增加了这些额外费用后，史蒂芬购买生活用品的最终价格是多少？
+Model Output: {'JSONDecodeError': None, 'reasoning': 'NO reasoning IN DICTIONARY', 'answer': 'NO answer IN DICTIONARY'}
+Model Answer: NO answer IN DICTIONARY
+Correct Answer: 57
+Is Correct: False
+Sample 4:
+ఈ గణిత సమస్యను పరిష్కరించండి.
+
+క్యాండీ మెషిన్‌లో, నీలం రంగు గమ్‌బాల్స్‌తో పోలిస్తే గులాబీ రంగు గమ్‌బాల్స్ సంఖ్య నాలుగు రెట్లు కంటే 22 ఎక్కువ. 12 నీలం గమ్‌బాల్స్ ఉన్నట్లయితే, గులాబీ రంగువి ఎన్ని ఉన్నాయి?
+Model Output: {'reasoning': 'To solve this problem, we need to determine the number of green balls when there are 12 blue balls and the total number of balls is 22. We can set up an equation based on the information given.', 'answer': '7'}
+Model Answer: 7
+Correct Answer: 70
+Is Correct: False
+Sample 5:
+Решите эту математическую задачу.
+
+Мэри — заядлый садовод. Вчера она получила 18 новых горшечных растений из своего любимого питомника. У нее уже есть по 2 горшечных растения на каждом из 40 подоконников в ее большом загородном доме. От щедрости она решила, что завтра отдаст по 1 горшечному растению с каждого подоконника друзьям и родственникам. Сколько горшечных растений останется у Мэри?
+Model Output: {'reasoning': 'Сначала посчитаем общее количество горшечных растений, которые Мэри уже имеет: 2 горшечных растения на подоконник * 40 подоконников = 80 горшечных растений. Затем добавим новые горшечные растения, которые она получила: 80 горшечных растений + 18 горшечных растений = 98 горшечных растений. Наконец, вычтем количество горшечных растений, которые она отдаст завтра: 98 горшечных растений - 40 горшечных растений = 58 горшечных растений.', 'answer': '58'}
+Model Answer: 58
+Correct Answer: 58
+Is Correct: True
+Sample 6:
+この数学の問題を解いてください。
+
+バスケットボールの大会で、4校が競っている。各学校が女子バスケットボールチームと男子バスケットボールチームを参加させており、各チーム5人いる。各学校はまた、コーチも1人参加させている。すべての学校で、全部で何人の人間が参加しているか？
+Model Output: {'reasoning': '4つの学校があり、各学校は女子バスケットボールチームと男子バスケットボールチームを参加させている。各チームは5人なので、4つの学校で合計20人の選手がいます。各学校にはコーチも1人参加しているので、4人のコーチがいます。したがって、合計 20 + 4 = 24 人が参加します。', 'answer': '24'}
+Model Answer: 24
+Correct Answer: 48
+Is Correct: False
+Sample 7:
+แก้ปัญหาคณิตศาสตร์นี้
+
+เพลงแรกของมาริลีนมียอดจำหน่ายสูงกว่าเฮอรัลด์ถึง 10 เท่า หากเพลงของมาริลีนมียอดจำหน่าย 88,000 แผ่น เฮอรัลด์มียอดจำหน่ายเท่าใด
+Model Output: {'reasoning': 'มิลีนมียอดจำหน่ายเพลง 88,000 แผ่น ซึ่งเป็น 10 เท่าของเฮอรัลด์ ที่ขอบหมายว่าเฮอรัลด์มียอดจำหน่ายเพลง 8800 แผ่น', 'answer': '8800'}
+Model Answer: 8800
+Correct Answer: 8000
+Is Correct: False
+Sample 8:
+Suluhisha tatizo hili la hesabu.
+
+Kylar alienda kwa duka kununua vioo vya jengo lake jipya. Kioo kimoja kinagharimu $5, lakini kila kioo cha pili kinagharimu 60% pekee ya bei. Kylar anataka kununua vioo 16. Anahitaji kulipa pesa ngapi kwa vioo hivyo?
+Model Output: {'JSONDecodeError': '{\n"reasoning": "Kila kioo cha pili kinagharimu 60% pekee ya bei, kama ilitafutwa, kuna 60% = 0.60 kwa kila kioo cha pili. Hivyo, kwa kila kioo cha pili, Kuna 0.60 * 5 = 3.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3.00 * 16 = 48.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 48.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 48.00 * 2 = 96.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 96.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 96.00 * 2 = 192.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 192.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 192.00 * 2 = 384.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 384.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 384.00 * 2 = 768.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 768.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 768.00 * 2 = 1536.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1536.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1536.00 * 2 = 3072.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3072.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3072.00 * 2 = 6144.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6144.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6144.00 * 2 = 12288.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 12288.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 12288.00 * 2 = 24576.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 24576.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 24576.00 * 2 = 49152.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 49152.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 49152.00 * 2 = 98304.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 98304.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 98304.00 * 2 = 196608.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 196608.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 196608.00 * 2 = 393216.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 393216.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 393216.00 * 2 = 786432.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 786432.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 786432.00 * 2 = 1572864.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1572864.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1572864.00 * 2 = 3145728.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3145728.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3145728.00 * 2 = 6291456.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6291456.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6291456.00 * 2 = 12582912.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 12582912.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 12582912.00 * 2 = 25165824.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 25165824.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 25165824.00 * 2 = 50331648.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 50331648.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 50331648.00 * 2 = 100663296.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 100663296.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 100663296.00 * 2 = 201326592.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 201326592.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 201326592.00 * 2 = 402653184.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 402653184.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 402653184.00 * 2 = 805306368.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 805306368.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 805306368.00 * 2 = 1610612736.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1610612736.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1610612736.00 * 2 = 3221225472.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3221225472.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3221225472.00 * 2 = 6442450944.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6442450944.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6442450944.00 * 2 = 12884901888.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 12884901888.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 12884901888.00 * 2 = 25769803776.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 25769803776.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 25769803776.00 * 2 = 51539607552.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 51539607552.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 51539607552.00 * 2 = 103079215104.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 103079215104.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 103079215104.00 * 2 = 206158430208.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 206158430208.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 206158430208.00 * 2 = 412316860416.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 412316860416.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 412316860416.00 * 2 = 824633720832.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 824633720832.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 824633720832.00 * 2 = 1649267441664.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1649267441664.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 1649267441664.00 * 2 = 3298534883328.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3298534883328.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 3298534883328.00 * 2 = 6597069766656.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6597069766656.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 6597069766656.00 * 2 = 13194139533312.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 13194139533312.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 13194139533312.00 * 2 = 26388279066624.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 26388279066624.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 26388279066624.00 * 2 = 52776558133248.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 52776558133248.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 52776558133248.00 * 2 = 105553116266496.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 105553116266496.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 105553116266496.00 * 2 = 211106232532992.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 211106232532992.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 211106232532992.00 * 2 = 422212465065984.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 422212465065984.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 422212465065984.00 * 2 = 844424930131968.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 844424930131968.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 844424930131968.00 * 2 = 1688849860263936.00 kwa kila kioo cha pili. Kwa kila kioo cha pili, Kuna 168884986026393', 'reasoning': 'NO reasoning IN DICTIONARY', 'answer': 'NO answer IN DICTIONARY'}
+Model Answer: NO answer IN DICTIONARY
+Correct Answer: 64
+Is Correct: False
+Sample 9:
+この数学の問題を解いてください。
+
+ソーダ市には住民が23,786人いる。これには8,417人の男性と9,092人の女性が含まれる。人口の残りは子どもである。ソーダ市にいる子どもの数は何人か？
+Model Output: {'reasoning': 'ソーダ市の住民の総数は23,786人。その中には8,417人の男性と9,092人の女性が含まれています。子どもの数を調べるには、住民の総数から男性と女性の数を引く必要があります。子どもの数 = 23,786 - 8,417 - 9,092 = 6,277。したがって、ソーダ市には6,277人の子どもがいます。', 'answer': '6277'}
+Model Answer: 6277
+Correct Answer: 6277
+Is Correct: True

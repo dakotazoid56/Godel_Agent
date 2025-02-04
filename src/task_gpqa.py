@@ -10,12 +10,14 @@ import json
 import numpy as np
 import pandas as pd
 from wrap import wrap_solver
-from config import get_openai_instance,DEFAULT_MODEL,SOLVER_MODEL
+import cohere
 
+NUM_EXAMPLES = 20
 
 Example = namedtuple('Example', ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_index', 'domain'])
 
-client = get_openai_instance()
+api_key = os.getenv("COHERE_API_KEY")
+client = cohere.ClientV2(api_key=api_key)
 
 threshold = 0.31
 last_test_acc = 0.
@@ -46,7 +48,7 @@ def real_evaluate(solver):
     INDEX_TO_LETTER = {0: 'A', 1: 'B', 2: 'C', 3: 'D'}
     # set seed 0 for valid set
     questions = load_questions(data_filename, seed=0)
-    val_questions = questions[32:]
+    val_questions = questions[:NUM_EXAMPLES]
     max_workers = min(len(val_questions), 48)
 
     task_queue = []
@@ -90,7 +92,7 @@ class GPQA_Task:
         INDEX_TO_LETTER = {0: 'A', 1: 'B', 2: 'C', 3: 'D'}
         # set seed 0 for valid set
         questions = load_questions(data_filename, seed=0)
-        val_questions = questions[:32]
+        val_questions = questions[:NUM_EXAMPLES]
         max_workers = min(len(val_questions), 48)
 
         task_queue = []

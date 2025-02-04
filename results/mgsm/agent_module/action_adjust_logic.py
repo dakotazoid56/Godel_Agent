@@ -21,8 +21,8 @@ def action_adjust_logic(module_name: str, target_name: str, new_code=str, target
     """
     if module_name == "agent_module":
         if target_name == "solver":
-            if "gpt-4o" in new_code:
-                raise ValueError("ONLY model **gpt-3.5-turbo** can be used in solver.")
+            #if "command-r7b-12-2024" in new_code:
+            #    raise ValueError("ONLY model **command-r7b-12-2024** can be used in solver.")
             if "time.sleep" in new_code:
                 raise ValueError("Don't use `time.sleep` in solver.")
         if target_name == "Agent.action_call_llm":

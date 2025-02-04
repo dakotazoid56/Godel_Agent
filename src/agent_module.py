@@ -736,7 +736,6 @@ class Agent(AgentBase):
                         }
                         for tool_call in cohere_response.message.tool_calls
                     ]
-
                 else:
                     print(cohere_response.message)
                 

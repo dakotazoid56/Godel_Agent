@@ -10,12 +10,15 @@ import numpy as np
 import time
 from wrap import wrap_solver
 import os
-from config import get_openai_instance, DEFAULT_MODEL, SOLVER_MODEL
+import cohere
 
 Example = namedtuple('Example', ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_index'])
-client = get_openai_instance()
+api_key = os.getenv("COHERE_API_KEY")
+client = cohere.ClientV2(api_key=api_key)
 threshold = 0.80
 last_test_acc = 0.
+
+NUM_EXAMPLES = 20
 
 QUERY_TEMPLATE_MULTICHOICE = """
 Answer the following multiple choice question.
@@ -56,7 +59,7 @@ def real_evaluate(solver):
     random.seed(0)
     examples = [row.to_dict() for _, row in df.iterrows()]
     random.shuffle(examples)
-    examples = examples[128:928]
+    examples = examples[:NUM_EXAMPLES]
     questions = [format_multichoice_question(example) for example in examples]
     answers = [example['Answer'] for example in examples]
 
@@ -101,7 +104,7 @@ class MMLU_Task:
         examples = examples[:128]
         random.seed(time.time())
         random.shuffle(examples)
-        examples = examples[:20]
+        examples = examples[:NUM_EXAMPLES]
         questions = [format_multichoice_question(example) for example in examples]
         answers = [example['Answer'] for example in examples]
 

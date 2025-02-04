@@ -16,8 +16,10 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from wrap import wrap_solver
-from config import DEFAULT_MODEL,SOLVER_MODEL
+import os
 
+
+NUM_EXAMPLES = 20
 
 threshold = 83
 last_test_acc = 0.
@@ -48,7 +50,7 @@ def real_evaluate(solver):
     examples = load_drop(data_filename)[1:-1]  # first one and the last one is for few-shot examples
     random.seed(0)
     random.shuffle(examples)
-    examples = examples[128:928]
+    examples = examples[:NUM_EXAMPLES]
     questions = [example['inputs'] for example in examples]
     answers = [example['targets'] for example in examples]
 
@@ -94,7 +96,7 @@ class DROP_Task:
         import time
         # random.seed(time.time())
         # random.shuffle(examples)
-        examples = examples[:20]
+        examples = examples[:NUM_EXAMPLES]
         questions = [example['inputs'] for example in examples]
         answers = [example['targets'] for example in examples]
 

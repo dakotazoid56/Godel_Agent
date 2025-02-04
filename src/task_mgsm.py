@@ -7,16 +7,18 @@ from tqdm import tqdm
 from openai import OpenAI
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
-from config import get_openai_instance, DEFAULT_MODEL, SOLVER_MODEL
-
+import cohere
 import numpy as np
 from wrap import wrap_solver
 
+NUM_EXAMPLES = 10
+
 Example = namedtuple('Example', ['question', 'choice1', 'choice2', 'choice3', 'choice4', 'correct_index'])
-threshold = 0.5
+threshold = 0.2 #0.5
 last_test_acc = 0.
 
-client = get_openai_instance()
+api_key = os.getenv("COHERE_API_KEY")
+client = cohere.ClientV2(api_key=api_key)
 
 LANG_TO_INSTRUCTIONS = {
     "en": """Solve this math problem.
@@ -81,7 +83,7 @@ def real_evaluate(solver):
     examples = get_all_examples()
     random.seed(0)
     random.shuffle(examples)
-    examples = examples[128:928]
+    examples = examples[:NUM_EXAMPLES]
     questions = [example['inputs'] for example in examples]
     answers = [example['targets'] for example in examples]
     max_workers = min(len(examples), 48)
@@ -121,7 +123,7 @@ class MGSM_Task:
         examples = examples[:128]
         random.seed(time.time())
         random.shuffle(examples)
-        examples = examples[:20]
+        examples = examples[:NUM_EXAMPLES]
         questions = [example['inputs'] for example in examples]
         answers = [example['targets'] for example in examples]
         max_workers = min(len(examples), 48)

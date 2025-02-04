@@ -6,7 +6,7 @@ def solver(agent_instance, task_input: str):
         {'role': 'user', 'content': f'# Your Task:\n{task_input}'}
     ]
     response = agent_instance.action_call_json_format_llm(
-        model='gpt-3.5-turbo',
+        model='command-r7b-12-2024',
         messages=messages,
         temperature=0.5,
         role='read comprehension expert',

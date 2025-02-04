@@ -5,7 +5,7 @@ def solver(agent, task: str):
     import json
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        model="gpt-3.5-turbo",
+        model="command-r7b-12-2024",
         messages=messages,
         temperature=0.5,
         num_of_response=20,

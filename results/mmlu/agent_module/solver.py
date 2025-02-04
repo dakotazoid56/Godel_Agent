@@ -25,7 +25,7 @@ def solver(agent, task: str):
     
     # Using self-consistency by generating multiple responses
     response = agent.action_call_json_format_llm(
-        model='gpt-3.5-turbo', 
+        model='command-r7b-12-2024', 
         messages=messages, 
         temperature=0.8, 
         num_of_response=5,

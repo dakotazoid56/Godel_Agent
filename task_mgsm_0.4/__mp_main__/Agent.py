@@ -4,13 +4,11 @@ class Agent(AgentBase):
     def __init__(agent, api_key=None, goal_prompt_path='goal_prompt.md', key_path='key.env'):
         # Load configurations
         agent.goal_prompt = open(goal_prompt_path, 'r').read()
-        agent.goal_task = mmlu.MMLU_Task()
+        agent.goal_task = task_mgsm.MGSM_Task()
         if api_key is None:
             api_key = open(key_path, 'r').read().strip()
-        openai.api_key = api_key
+        api_key = os.getenv("COHERE_API_KEY")
         agent.client = cohere.ClientV2(api_key=api_key)
-
-        # Initialize optimization history and iterations
 
         agent.action_functions = [
             {
@@ -26,26 +24,22 @@ class Agent(AgentBase):
                                 "description": "A detailed analysis of the current state, including reasons or plans for the following actions."
                             }
                         },
-                        "required": ["analysis"],
-                        "additionalProperties": False,
-                    },
-                    "strict": True
+                        "required": ["analysis"]
+                    }
                 }
             },
-            # {
-            #     "type": "function",
-            #     "function": {
-            #         "name": "action_environment_aware",
-            #         "description": "Reflect and summarize available resources of the current runtime environment including variables, functions, modules, and external libraries.",
-            #         "parameters": {
-            #             "type": "object",
-            #             "properties": {},
-            #             "required": [],
-            #             "additionalProperties": False
-            #         },
-            #         "strict": True
-            #     }
-            # },
+            {
+                "type": "function",
+                "function": {
+                    "name": "action_environment_aware",
+                    "description": "Reflect and summarize available resources of the current runtime environment including variables, functions, modules, and external libraries.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
             {
                 "type": "function",
                 "function": {
@@ -63,10 +57,8 @@ class Agent(AgentBase):
                                 "description": "The name of the function, method, or class to read. If the target_name contains a dot, it refers to a method within a class (e.g., 'Agent.action_call_llm')."
                             }
                         },
-                        "required": ["module_name", "target_name"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["module_name", "target_name"]
+                    }
                 }
             },
             {
@@ -100,10 +92,8 @@ class Agent(AgentBase):
                                 "description": "The operation to perform."
                             }
                         },
-                        "required": ["module_name", "target_name", "new_code", "target_type", "operation"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["module_name", "target_name", "new_code", "target_type", "operation"]
+                    }
                 }
             },
             {
@@ -124,10 +114,8 @@ class Agent(AgentBase):
                                 "description": "The code to execute as a string."
                             }
                         },
-                        "required": ["code_type", "code"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["code_type", "code"]
+                    }
                 }
             },
             {
@@ -139,7 +127,7 @@ class Agent(AgentBase):
                         "type": "object",
                         "properties": {
                             "model": {
-                                "enum": ["command-r7b-12-2024", "command-r7b-12-2024"],
+                                "type": "string",
                                 "description": "ID of the model to use."
                             },
                             "messages": {
@@ -152,8 +140,7 @@ class Agent(AgentBase):
                                         },
                                         "content": {"type": "string"}
                                     },
-                                    "required": ["role", "content"],
-                                    "additionalProperties": False
+                                    "required": ["role", "content"]
                                 },
                                 "description": "A list of messages comprising the conversation so far."
                             },
@@ -177,10 +164,8 @@ class Agent(AgentBase):
                                 "description": "A string that specifies the conditions required to perform a call to the LLM."
                             }
                         },
-                        "required": ["model", "messages", "temperature", "role", "return_dict_keys", "requirements"],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": ["model", "messages", "temperature", "role", "return_dict_keys", "requirements"]
+                    }
                 }
             },
             {
@@ -191,10 +176,8 @@ class Agent(AgentBase):
                     "parameters": {
                         "type": "object",
                         "properties": {},
-                        "required": [],
-                        "additionalProperties": False
-                    },
-                    "strict": True
+                        "required": []
+                    }
                 }
             }
         ]
@@ -209,7 +192,6 @@ class Agent(AgentBase):
         print(first_aware_content, end="\n\n")
         print(solver_logic, end="\n\n")
 
-        # agent.optimize_history.append({"role": "user", "content": first_aware_content})
         agent.optimize_history.append({"role": "user", "content": "The logic of solver:\n" + solver_logic})
 
     def execute_action(agent, actions: typing.Dict):
@@ -271,22 +253,11 @@ class Agent(AgentBase):
 
 
         print("Action Counter:", action_counter, end='\n\n')
-        if action_counter["evolve"] >= 100:
+        if action_counter["evolve"] >= 30:
             sys.exit(1)
         print("Agent Evolve", end="\n\n")
         
         agent.evolve()
-        # try:
-        #     agent.evolve()
-        # except Exception as e:
-        #     exception_stringio = io.StringIO()
-        #     traceback.print_exc(file=exception_stringio, limit=3)
-        #     result = exception_stringio.getvalue()
-        #     exception_stringio.close()
-        #     print("evolve error result:\n", result, sep="", end="\n\n")
-        #     agent.optimize_history.append({"role": "user", "content": f'There are some errors in your code:\nError {result}.\nTherefore, the action has been aborted.'})
-        #     agent.evolve = stored_evolve_f
-        #     agent.evolve()
 
     def evolve(agent):
         """
@@ -313,6 +284,7 @@ class Agent(AgentBase):
                     *agent.optimize_history]
         try:
             response = agent.action_call_llm(messages=messages, model="command-r7b-12-2024", response_format="text", tools=agent.action_functions, tool_choice="required")
+
         except Exception as e:
             print(repr(e))
             for message in messages:
@@ -321,12 +293,13 @@ class Agent(AgentBase):
         
         agent.optimize_history.append(response[0])
         agent.execute_action(response[0])
+    
 
     def action_call_json_format_llm(
         agent,
         *,
         messages: typing.List[typing.Dict[str, str]], 
-        model: typing.Literal["command-r7b-12-2024", "command-r7b-12-2024", "command-r7b-12-2024"] = "command-r7b-12-2024", 
+        model: "command-r7b-12-2024",
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
         num_of_response: int = 1,
@@ -356,7 +329,8 @@ class Agent(AgentBase):
     def action_call_llm(
         agent, 
         *,
-        model: typing.Literal["command-r7b-12-2024", "command-r7b-12-2024", "command-r7b-12-2024"] = "command-r7b-12-2024", 
+        #model: typing.Literal["command-r7b-12-2024", "command-r7b-12-2024", "command-r7b-12-2024"] = "command-r7b-12-2024", 
+        model:"command-r7b-12-2024",
         messages: typing.List[typing.Dict[str, str]], 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
@@ -388,22 +362,110 @@ class Agent(AgentBase):
             messages = copy.deepcopy(messages)
             for message in messages:
                 message["content"] = str(message["content"])
-            
+
             kwargs = {
-                "n": n,
                 "model": model,
                 "messages": messages,
                 "response_format": {"type": response_format if response_format == "json_object" else "text"}, 
                 "temperature": temperature,
-                "max_completion_tokens": max_completion_tokens
+                "max_tokens": max_completion_tokens
             }
 
             if tools is not None:
                 kwargs["tools"] = tools
                 kwargs["tool_choice"] = tool_choice
 
-            response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
+            # Make the API call
+            #response = agent.client.chat(**kwargs)
+
+            # With Trial Key, Might Exceed 40 API calls per minute, so wait before retrying
+            while True:
+                try:
+                    # Make the API call
+                    response = agent.client.chat(**kwargs)
+                    break  # Exit loop if successful
+                except cohere.errors.TooManyRequestsError:
+                    print("Rate limit exceeded. Retrying in 60 seconds...")
+                    time.sleep(65)  # Wait for 65 seconds before retrying
+                        #cohere.errors.too_many_requests_error.TooManyRequestsError
+
+            def cohere_to_openai_format(cohere_response):
+                """
+                Convert a Cohere ChatResponse to OpenAI's response format.
+                
+                Args:
+                    cohere_response: Cohere ChatResponse object
+                    
+                Returns:
+                    dict: Response formatted in OpenAI structure
+                """
+                # Format the message content - handle TextAssistantMessageResponseContentItem
+                content = cohere_response.message.content
+                if isinstance(content, list):
+                    # Combine all text items into a single string
+                    content = ''.join(item.text for item in content)
+                # Format the message content
+                message = {
+                    "role": cohere_response.message.role,
+                    "content": content,
+                    "refusal": None
+                }
+                
+                # Add tool_calls if present
+                if cohere_response.message.tool_calls:
+                    message["tool_calls"] = [
+                        {
+                            "id": tool_call.id,
+                            "type": tool_call.type,
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments
+                            }
+                        }
+                        for tool_call in cohere_response.message.tool_calls
+                    ]
+                
+                # Create the OpenAI-style response structure
+                openai_format = {
+                    "id": cohere_response.id,
+                    "choices": [
+                        {
+                            "finish_reason": cohere_response.finish_reason.lower(),
+                            "index": 0,
+                            "logprobs": cohere_response.logprobs,
+                            "message": message
+                        }
+                    ],
+                    "created": None,  # Cohere doesn't provide this
+                    "model": None,    # Cohere doesn't provide this
+                    "object": "chat.completion",
+                    "service_tier": "default",
+                    "system_fingerprint": None,
+                    "usage": {
+                        "completion_tokens": cohere_response.usage.tokens.output_tokens,
+                        "prompt_tokens": cohere_response.usage.tokens.input_tokens,
+                        "total_tokens": (
+                            cohere_response.usage.tokens.input_tokens + 
+                            cohere_response.usage.tokens.output_tokens
+                        ),
+                        "completion_tokens_details": {
+                            "accepted_prediction_tokens": 0,
+                            "audio_tokens": 0,
+                            "reasoning_tokens": 0,
+                            "rejected_prediction_tokens": 0
+                        },
+                        "prompt_tokens_details": {
+                            "audio_tokens": 0,
+                            "cached_tokens": 0
+                        }
+                    }
+                }
+                
+                return openai_format
             
+            formatted_response = cohere_to_openai_format(response)
+            log_model_input_output(kwargs, formatted_response, model)
+
             def try_parse_json(content):
                 try:
                     return json.loads(content)
@@ -411,8 +473,9 @@ class Agent(AgentBase):
                     return {"JSONDecodeError": content}
 
             if response_format == "text":
-                return [choice["message"] for choice in response["choices"]]
+                return [choice["message"] for choice in formatted_response["choices"]]
             else:
-                return [try_parse_json(choice["message"]["content"]) for choice in response["choices"]]
+                return [try_parse_json(choice["message"]["content"]) for choice in formatted_response["choices"]]
+    
         except Exception as e:
             raise e

@@ -8,7 +8,7 @@ class Agent(AgentBase):
         if api_key is None:
             api_key = open(key_path, 'r').read().strip()
         openai.api_key = api_key
-        agent.client = openai.OpenAI(api_key=api_key)
+        agent.client = cohere.ClientV2(api_key=api_key)
 
         # Initialize optimization history and iterations
 
@@ -139,7 +139,7 @@ class Agent(AgentBase):
                         "type": "object",
                         "properties": {
                             "model": {
-                                "enum": ["gpt-4o-mini", "gpt-4o"],
+                                "enum": ["command-r7b-12-2024", "command-r7b-12-2024"],
                                 "description": "ID of the model to use."
                             },
                             "messages": {
@@ -312,7 +312,7 @@ class Agent(AgentBase):
                     {"role": "system", "name": "Environment", "content": action_environment_aware(agent)},
                     *agent.optimize_history]
         try:
-            response = agent.action_call_llm(messages=messages, model="gpt-4o", response_format="text", tools=agent.action_functions, tool_choice="required")
+            response = agent.action_call_llm(messages=messages, model="command-r7b-12-2024", response_format="text", tools=agent.action_functions, tool_choice="required")
         except Exception as e:
             print(repr(e))
             for message in messages:
@@ -326,7 +326,7 @@ class Agent(AgentBase):
         agent,
         *,
         messages: typing.List[typing.Dict[str, str]], 
-        model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
+        model: typing.Literal["command-r7b-12-2024", "command-r7b-12-2024", "command-r7b-12-2024"] = "command-r7b-12-2024", 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
         num_of_response: int = 1,
@@ -356,7 +356,7 @@ class Agent(AgentBase):
     def action_call_llm(
         agent, 
         *,
-        model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
+        model: typing.Literal["command-r7b-12-2024", "command-r7b-12-2024", "command-r7b-12-2024"] = "command-r7b-12-2024", 
         messages: typing.List[typing.Dict[str, str]], 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
