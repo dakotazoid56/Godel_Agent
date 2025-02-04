@@ -4,6 +4,7 @@ import re
 import ast
 import sys
 import json
+import time
 import typing
 import inspect
 import functools
@@ -688,7 +689,18 @@ class Agent(AgentBase):
                 kwargs["tool_choice"] = tool_choice
 
             # Make the API call
-            response = agent.client.chat(**kwargs)
+            #response = agent.client.chat(**kwargs)
+
+            # With Trial Key, Might Exceed 40 API calls per minute, so wait before retrying
+            while True:
+                try:
+                    # Make the API call
+                    response = agent.client.chat(**kwargs)
+                    break  # Exit loop if successful
+                except cohere.errors.TooManyRequestsError:
+                    print("Rate limit exceeded. Retrying in 60 seconds...")
+                    time.sleep(65)  # Wait for 65 seconds before retrying
+                        #cohere.errors.too_many_requests_error.TooManyRequestsError
 
             def cohere_to_openai_format(cohere_response):
                 """
