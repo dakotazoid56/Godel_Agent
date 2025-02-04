@@ -25,8 +25,7 @@ last_test_acc = 0.
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        #model="gpt-3.5-turbo", 
-        model=SOLVER_MODEL,
+        model="command-r7b-12-2024", 
         messages=messages, 
         temperature=0.5, 
         num_of_response=1,
@@ -80,6 +79,7 @@ def real_evaluate(solver):
     acc = sum(acc_list) / len(acc_list)
     interval = bootstrap_confidence_interval(acc_list)
     if acc > last_test_acc:
+        os.makedirs("result", exist_ok=True)
         open(f"result/drop_{round(acc, 4)}.txt", "w").writelines([interval] + info_list)
     return acc
 

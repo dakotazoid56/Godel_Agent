@@ -642,8 +642,7 @@ class Agent(AgentBase):
     def action_call_llm(
         agent, 
         *,
-        #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
-        model:"command-r7b-12-2024",
+        model: "command-r7b-12-2024", 
         messages: typing.List[typing.Dict[str, str]], 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
@@ -737,6 +736,9 @@ class Agent(AgentBase):
                         }
                         for tool_call in cohere_response.message.tool_calls
                     ]
+
+                else:
+                    print(cohere_response.message)
                 
                 # Create the OpenAI-style response structure
                 openai_format = {
