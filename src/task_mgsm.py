@@ -60,8 +60,7 @@ ALL_LANGUAGES = ["bn", "de", "en", "es", "fr", "ja", "ru", "sw", "te", "th", "zh
 
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
-    response = agent.action_call_json_format_llm(
-        #model="gpt-3.5-turbo", 
+    response = agent.action_call_json_format_llm( 
         model=SOLVER_MODEL,
         messages=messages, 
         temperature=0.8, 

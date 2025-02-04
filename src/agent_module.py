@@ -16,7 +16,7 @@ import collections
 import openai
 import logic
 import cohere
-from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL,log_model_input_output
+from config import log_model_input_output
 
 
 action_counter = collections.defaultdict(int)
@@ -129,11 +129,6 @@ def action_adjust_logic(module_name: str, target_name: str, new_code=str, target
     """
     if module_name == "agent_module":
         if target_name == "solver":
-            #if "gpt-4o" in new_code:
-            if EVOLVE_MODEL in new_code:
-                #raise ValueError("ONLY model **gpt-3.5-turbo** can be used in solver.")
-                raise ValueError(f"ONLY model **{SOLVER_MODEL}** can be used in solver.")
-
             if "time.sleep" in new_code:
                 raise ValueError("Don't use `time.sleep` in solver.")
         if target_name == "Agent.action_call_llm":
@@ -282,14 +277,11 @@ def action_run_code(code_type: str, code: str, timeout: float = 30.0) -> str:
     
     return result_str or "No output, errors, or return value."
 
-#import Gödel_Agent.src.task_mgsm as task_mgsm
 import task_mgsm as task_mgsm
-
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        #model="gpt-3.5-turbo", 
-        model=SOLVER_MODEL,
+        model="command-r7b-12-2024",
         messages=messages, 
         temperature=0.8, 
         num_of_response=1,
@@ -320,76 +312,6 @@ def action_evaluate_on_task(task, solver):
     return feedback
 
 
-def cohere_to_openai_format(cohere_response):
-    """
-    Convert a Cohere ChatResponse to OpenAI's response format.
-    
-    Args:
-        cohere_response: Cohere ChatResponse object
-        
-    Returns:
-        dict: Response formatted in OpenAI structure
-    """
-    # Format the message content
-    message = {
-        "role": cohere_response.message.role,
-        "content": cohere_response.message.content,
-        "refusal": None
-    }
-    
-    # Add tool_calls if present
-    if cohere_response.message.tool_calls:
-        message["tool_calls"] = [
-            {
-                "id": tool_call.id,
-                "type": tool_call.type,
-                "function": {
-                    "name": tool_call.function.name,
-                    "arguments": tool_call.function.arguments
-                }
-            }
-            for tool_call in cohere_response.message.tool_calls
-        ]
-    
-    # Create the OpenAI-style response structure
-    openai_format = {
-        "id": cohere_response.id,
-        "choices": [
-            {
-                "finish_reason": cohere_response.finish_reason.lower(),
-                "index": 0,
-                "logprobs": cohere_response.logprobs,
-                "message": message
-            }
-        ],
-        "created": None,  # Cohere doesn't provide this
-        "model": None,    # Cohere doesn't provide this
-        "object": "chat.completion",
-        "service_tier": "default",
-        "system_fingerprint": None,
-        "usage": {
-            "completion_tokens": cohere_response.usage.tokens.output_tokens,
-            "prompt_tokens": cohere_response.usage.tokens.input_tokens,
-            "total_tokens": (
-                cohere_response.usage.tokens.input_tokens + 
-                cohere_response.usage.tokens.output_tokens
-            ),
-            "completion_tokens_details": {
-                "accepted_prediction_tokens": 0,
-                "audio_tokens": 0,
-                "reasoning_tokens": 0,
-                "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-                "audio_tokens": 0,
-                "cached_tokens": 0
-            }
-        }
-    }
-    
-    return openai_format
-
-
 class Agent(AgentBase):
     def __init__(agent, api_key=None, goal_prompt_path='goal_prompt.md', key_path='key.env'):
         # Load configurations
@@ -397,9 +319,8 @@ class Agent(AgentBase):
         agent.goal_task = task_mgsm.MGSM_Task()
         if api_key is None:
             api_key = open(key_path, 'r').read().strip()
-        #openai.api_key = api_key
-        #agent.client = openai.OpenAI(api_key=api_key)
-        agent.client = get_openai_instance()
+        api_key = os.getenv("COHERE_API_KEY")
+        agent.client = cohere.ClientV2(api_key=api_key)
 
         agent.action_functions = [
             {
@@ -519,9 +440,6 @@ class Agent(AgentBase):
                         "properties": {
                             "model": {
                                 "type": "string",
-                                #"enum": ["gpt-4o-mini", "gpt-4o"],
-                                "enum": NON_SOLVER_MODELS,
-
                                 "description": "ID of the model to use."
                             },
                             "messages": {
@@ -586,7 +504,6 @@ class Agent(AgentBase):
         print(first_aware_content, end="\n\n")
         print(solver_logic, end="\n\n")
 
-        # agent.optimize_history.append({"role": "user", "content": first_aware_content})
         agent.optimize_history.append({"role": "user", "content": "The logic of solver:\n" + solver_logic})
 
     def execute_action(agent, actions: typing.Dict):
@@ -678,8 +595,7 @@ class Agent(AgentBase):
                     {"role": "system", "name": "Environment", "content": action_environment_aware(agent)},
                     *agent.optimize_history]
         try:
-            #response = agent.action_call_llm(messages=messages, model="gpt-4o", response_format="text", tools=agent.action_functions, tool_choice="required")
-            response = agent.action_call_llm(messages=messages, model=EVOLVE_MODEL, response_format="text", tools=agent.action_functions, tool_choice="required")
+            response = agent.action_call_llm(messages=messages, model="command-r7b-12-2024", response_format="text", tools=agent.action_functions, tool_choice="required")
 
         except Exception as e:
             print(repr(e))
@@ -695,8 +611,7 @@ class Agent(AgentBase):
         agent,
         *,
         messages: typing.List[typing.Dict[str, str]], 
-        #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
-        model: DEFAULT_MODEL,
+        model: "command-r7b-12-2024",
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
         num_of_response: int = 1,
@@ -727,7 +642,7 @@ class Agent(AgentBase):
         agent, 
         *,
         #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
-        model:DEFAULT_MODEL,
+        model:"command-r7b-12-2024",
         messages: typing.List[typing.Dict[str, str]], 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
@@ -774,6 +689,80 @@ class Agent(AgentBase):
 
             # Make the API call
             response = agent.client.chat(**kwargs)
+
+            def cohere_to_openai_format(cohere_response):
+                """
+                Convert a Cohere ChatResponse to OpenAI's response format.
+                
+                Args:
+                    cohere_response: Cohere ChatResponse object
+                    
+                Returns:
+                    dict: Response formatted in OpenAI structure
+                """
+                # Format the message content - handle TextAssistantMessageResponseContentItem
+                content = cohere_response.message.content
+                if isinstance(content, list):
+                    # Combine all text items into a single string
+                    content = ''.join(item.text for item in content)
+                # Format the message content
+                message = {
+                    "role": cohere_response.message.role,
+                    "content": content,
+                    "refusal": None
+                }
+                
+                # Add tool_calls if present
+                if cohere_response.message.tool_calls:
+                    message["tool_calls"] = [
+                        {
+                            "id": tool_call.id,
+                            "type": tool_call.type,
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments
+                            }
+                        }
+                        for tool_call in cohere_response.message.tool_calls
+                    ]
+                
+                # Create the OpenAI-style response structure
+                openai_format = {
+                    "id": cohere_response.id,
+                    "choices": [
+                        {
+                            "finish_reason": cohere_response.finish_reason.lower(),
+                            "index": 0,
+                            "logprobs": cohere_response.logprobs,
+                            "message": message
+                        }
+                    ],
+                    "created": None,  # Cohere doesn't provide this
+                    "model": None,    # Cohere doesn't provide this
+                    "object": "chat.completion",
+                    "service_tier": "default",
+                    "system_fingerprint": None,
+                    "usage": {
+                        "completion_tokens": cohere_response.usage.tokens.output_tokens,
+                        "prompt_tokens": cohere_response.usage.tokens.input_tokens,
+                        "total_tokens": (
+                            cohere_response.usage.tokens.input_tokens + 
+                            cohere_response.usage.tokens.output_tokens
+                        ),
+                        "completion_tokens_details": {
+                            "accepted_prediction_tokens": 0,
+                            "audio_tokens": 0,
+                            "reasoning_tokens": 0,
+                            "rejected_prediction_tokens": 0
+                        },
+                        "prompt_tokens_details": {
+                            "audio_tokens": 0,
+                            "cached_tokens": 0
+                        }
+                    }
+                }
+                
+                return openai_format
             
             formatted_response = cohere_to_openai_format(response)
             log_model_input_output(kwargs, formatted_response, model)
