@@ -16,7 +16,6 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from wrap import wrap_solver
-from config import DEFAULT_MODEL,SOLVER_MODEL
 
 
 threshold = 83
@@ -25,8 +24,7 @@ last_test_acc = 0.
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        #model="gpt-3.5-turbo", 
-        model=SOLVER_MODEL,
+        model="mistral-large-latest",
         messages=messages, 
         temperature=0.5, 
         num_of_response=1,

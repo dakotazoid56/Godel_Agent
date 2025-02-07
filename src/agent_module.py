@@ -15,7 +15,9 @@ import contextlib
 import collections
 import openai
 import logic
-from config import get_openai_instance, ModelType, DEFAULT_MODEL, SOLVER_MODEL, NON_SOLVER_MODELS, EVOLVE_MODEL,log_model_input_output
+import time
+from mistralai import Mistral
+from config import log_model_input_output
 
 
 action_counter = collections.defaultdict(int)
@@ -128,10 +130,6 @@ def action_adjust_logic(module_name: str, target_name: str, new_code=str, target
     """
     if module_name == "agent_module":
         if target_name == "solver":
-            #if "gpt-4o" in new_code:
-            if EVOLVE_MODEL in new_code:
-                #raise ValueError("ONLY model **gpt-3.5-turbo** can be used in solver.")
-                raise ValueError(f"ONLY model **{SOLVER_MODEL}** can be used in solver.")
 
             if "time.sleep" in new_code:
                 raise ValueError("Don't use `time.sleep` in solver.")
@@ -281,28 +279,27 @@ def action_run_code(code_type: str, code: str, timeout: float = 30.0) -> str:
     
     return result_str or "No output, errors, or return value."
 
-#import Gödel_Agent.src.task_mgsm as task_mgsm
-import task_mgsm as task_mgsm
+import task_mmlu as task_mmlu
 
 def solver(agent, task: str):
     messages = [{"role": "user", "content": f"# Your Task:\n{task}"}]
     response = agent.action_call_json_format_llm(
-        #model="gpt-3.5-turbo", 
-        model=SOLVER_MODEL,
+        model="mistral-large-latest", 
         messages=messages, 
         temperature=0.8, 
         num_of_response=1,
-        role="math expert", 
+        role="knowledge and reasoning expert", 
         return_dict_keys=["reasoning", "answer"], 
         requirements=(
             "1. Please explain step by step.\n"
-            "2. The answer MUST be an integer.\n"
-        ).strip(),
+            "2. The answer MUST be either A or B or C or D.\n"
+        ).strip(), 
     )
     
     return_dict = response[0]
     return_dict["answer"] = str(return_dict.get("answer", ""))
     return return_dict
+
 
 
 def action_evaluate_on_task(task, solver):
@@ -313,21 +310,20 @@ def action_evaluate_on_task(task, solver):
         feedback (str): Evaluation feedback including valid set accuracy, test set accuray, test sample inputs, model outputs and valid sample answer.
     """
     feedback, acc = task.evaluate(solver)
-    if acc > task_mgsm.last_test_acc:
-        logic.store_all_logic(f"../{task_mgsm.__name__}_{round(acc, 4)}")
-        task_mgsm.last_test_acc = acc
+    if acc > task_mmlu.last_test_acc:
+        logic.store_all_logic(f"../{task_mmlu.__name__}_{round(acc, 4)}")
+        task_mmlu.last_test_acc = acc
     return feedback
 
 class Agent(AgentBase):
     def __init__(agent, api_key=None, goal_prompt_path='goal_prompt.md', key_path='key.env'):
         # Load configurations
         agent.goal_prompt = open(goal_prompt_path, 'r').read()
-        agent.goal_task = task_mgsm.MGSM_Task()
+        agent.goal_task = task_mmlu.MMLU_Task()
         if api_key is None:
             api_key = open(key_path, 'r').read().strip()
-        openai.api_key = api_key
-        #agent.client = openai.OpenAI(api_key=api_key)
-        agent.client = get_openai_instance()
+        api_key = os.getenv("MISTRAL_API_KEY")
+        agent.client = Mistral(api_key=api_key)
 
         # Initialize optimization history and iterations
 
@@ -458,9 +454,7 @@ class Agent(AgentBase):
                         "type": "object",
                         "properties": {
                             "model": {
-                                #"enum": ["gpt-4o-mini", "gpt-4o"],
-                                "enum": NON_SOLVER_MODELS,
-
+                                "type": "string",
                                 "description": "ID of the model to use."
                             },
                             "messages": {
@@ -623,7 +617,7 @@ class Agent(AgentBase):
                     *agent.optimize_history]
         try:
             #response = agent.action_call_llm(messages=messages, model="gpt-4o", response_format="text", tools=agent.action_functions, tool_choice="required")
-            response = agent.action_call_llm(messages=messages, model=EVOLVE_MODEL, response_format="text", tools=agent.action_functions, tool_choice="required")
+            response = agent.action_call_llm(messages=messages, model="mistral-large-latest", response_format="text", tools=agent.action_functions, tool_choice="required")
 
         except Exception as e:
             print(repr(e))
@@ -638,8 +632,7 @@ class Agent(AgentBase):
         agent,
         *,
         messages: typing.List[typing.Dict[str, str]], 
-        #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
-        model: DEFAULT_MODEL,
+        model: "mistral-large-latest",
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
         num_of_response: int = 1,
@@ -668,9 +661,8 @@ class Agent(AgentBase):
     
     def action_call_llm(
         agent, 
-        *,
-        #model: typing.Literal["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"] = "gpt-4o-mini", 
-        model:DEFAULT_MODEL,
+        *, 
+        model:"mistral-large-latest",
         messages: typing.List[typing.Dict[str, str]], 
         temperature: float = 1.0, 
         max_completion_tokens: int = 4096, 
@@ -704,22 +696,94 @@ class Agent(AgentBase):
                 message["content"] = str(message["content"])
             
             kwargs = {
-                "n": n,
+                #"n": n,
                 "model": model,
                 "messages": messages,
                 "response_format": {"type": response_format if response_format == "json_object" else "text"}, 
-                "temperature": temperature,
-                "max_completion_tokens": max_completion_tokens
+                #"temperature": temperature,
+                #"max_tokens": max_completion_tokens
             }
 
             if tools is not None:
                 kwargs["tools"] = tools
-                kwargs["tool_choice"] = tool_choice
+                kwargs["tool_choice"] = "any" if tool_choice == "required" else "auto"
 
-            response = agent.client.chat.completions.create(**kwargs).to_dict() # to Python dictionary
+
+            #response = agent.client.chat.complete(**kwargs)
+            while True:
+                try:
+                    # Make the API call
+                    response = agent.client.chat.complete(**kwargs)
+                    break  # Exit loop if successful
+                except Exception as e:
+                    # Check if it's the rate limit error by examining the error attributes
+                    if hasattr(e, 'status_code') and e.status_code == 429:
+                        #print("Rate limit exceeded. Retrying in 1 second...")
+                        time.sleep(1)  # Wait for 1 second before retrying
+                    else:
+                        raise  # Re-raise if it's not a rate limit error
+
+
+            def mistral_to_openai_format(mistral_response):
+                """
+                Convert a Mistral ChatCompletionResponse to OpenAI's response format.
+                """
+                # Format the message content
+                message = {
+                    "role": mistral_response.choices[0].message.role,
+                    "content": mistral_response.choices[0].message.content,
+                    "refusal": None
+                }
+                
+                # Add tool_calls if present
+                if mistral_response.choices[0].message.tool_calls:
+                    message["tool_calls"] = [
+                        {
+                            "id": tool_call.id,
+                            "type": tool_call.type,
+                            "function": {
+                                "name": tool_call.function.name,
+                                "arguments": tool_call.function.arguments
+                            }
+                        }
+                        for tool_call in mistral_response.choices[0].message.tool_calls
+                    ]
+                
+                # Create the OpenAI-style response structure
+                return {
+                    "id": mistral_response.id,
+                    "choices": [
+                        {
+                            "finish_reason": mistral_response.choices[0].finish_reason,
+                            "index": mistral_response.choices[0].index,
+                            "logprobs": None,  # Mistral doesn't provide this
+                            "message": message
+                        }
+                    ],
+                    "created": mistral_response.created,
+                    "model": mistral_response.model,
+                    "object": mistral_response.object,
+                    "service_tier": "default",
+                    "system_fingerprint": None,
+                    "usage": {
+                        "completion_tokens": mistral_response.usage.completion_tokens,
+                        "prompt_tokens": mistral_response.usage.prompt_tokens,
+                        "total_tokens": mistral_response.usage.total_tokens,
+                        "completion_tokens_details": {
+                            "accepted_prediction_tokens": 0,
+                            "audio_tokens": 0,
+                            "reasoning_tokens": 0,
+                            "rejected_prediction_tokens": 0
+                        },
+                        "prompt_tokens_details": {
+                            "audio_tokens": 0,
+                            "cached_tokens": 0
+                        }
+                    }
+                }
             
-            #TODO: Temp for Debugging
-            log_model_input_output(kwargs, response, model);
+            formatted_response = mistral_to_openai_format(response)
+            log_model_input_output(kwargs, formatted_response, model)
 
             def try_parse_json(content):
                 try:
@@ -728,9 +792,9 @@ class Agent(AgentBase):
                     return {"JSONDecodeError": content}
 
             if response_format == "text":
-                return [choice["message"] for choice in response["choices"]]
+                return [choice["message"] for choice in formatted_response["choices"]]
             else:
-                return [try_parse_json(choice["message"]["content"]) for choice in response["choices"]]
+                return [try_parse_json(choice["message"]["content"]) for choice in formatted_response["choices"]]
         except Exception as e:
             raise e
         
